@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DoP Document Verification</title>
+  <style>
+    :root {
+      --bg-main: #050816;
+      --bg-card: #0b1020;
+      --bg-card-soft: #101828;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.18);
+      --accent-strong: #16a34a;
+      --danger: #f97373;
+      --danger-soft: rgba(248, 113, 113, 0.18);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.2);
+      --shadow-soft: 0 24px 80px rgba(15, 23, 42, 0.8);
+      --shadow-modal: 0 30px 90px rgba(15, 23, 42, 0.9);
+      --radius-lg: 22px;
+      --radius-xl: 999px;
+      --transition-fast: 150ms ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #172554 0, #020617 40%, #020617 100%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px 80px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1160px;
+    }
+
+    .pill-header {
+      margin: 0 auto 32px;
+      padding: 10px 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.3), transparent 55%),
+                  rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 56%),
+                  radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 60%),
+                  var(--bg-card);
+      border-radius: 32px;
+      padding: 26px 32px 30px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.28;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .tool-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px 6px 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle at left, rgba(34, 197, 94, 0.3), transparent 55%),
+                  rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(209, 250, 229, 0.9);
+    }
+
+    .tool-pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.15);
+    }
+
+    .version-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+      opacity: 0.9;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 30px;
+    }
+
+    .layout-row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    @media (max-width: 860px) {
+      .layout-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    .file-area {
+      flex: 1.45;
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.2), transparent 55%),
+                  rgba(15, 23, 42, 0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-area::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg,
+        rgba(248, 250, 252, 0.08),
+        transparent 20%,
+        transparent 80%,
+        rgba(248, 250, 252, 0.06));
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .file-area.drag-over::before {
+      opacity: 1;
+    }
+
+    .file-select-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.3), transparent 55%),
+                  #1d4ed8;
+      color: #eff6ff;
+      box-shadow: 0 16px 40px rgba(30, 64, 175, 0.7);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+    }
+
+    .file-select-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.35);
+      font-size: 12px;
+    }
+
+    .file-select-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 40px rgba(30, 64, 175, 0.9);
+    }
+
+    .file-select-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 26px rgba(30, 64, 175, 0.7);
+    }
+
+    .file-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      color: var(--text-main);
+      opacity: 0.98;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.85;
+    }
+
+    .file-hint span {
+      color: rgba(148, 163, 184, 0.95);
+    }
+
+    .primary-btn {
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 999px;
+      padding: 16px 40px;
+      font-size: 15px;
+      font-weight: 600;
+      background: radial-gradient(circle at top, rgba(34, 197, 94, 0.4), transparent 55%),
+                  linear-gradient(90deg, #22c55e, #16a34a);
+      color: #ecfdf5;
+      box-shadow: 0 22px 45px rgba(22, 163, 74, 0.65);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+    }
+
+    .primary-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(120deg,
+        rgba(255, 255, 255, 0.22),
+        transparent 40%,
+        transparent 60%,
+        rgba(255, 255, 255, 0.16));
+      opacity: 0.25;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 25px 55px rgba(22, 163, 74, 0.85);
+    }
+
+    .primary-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 14px 30px rgba(22, 163, 74, 0.8);
+    }
+
+    .primary-btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+      filter: grayscale(0.12);
+    }
+
+    .primary-btn.pulse:not(.disabled) {
+      animation: buttonPulse 1.2s ease-out infinite;
+    }
+
+    @keyframes buttonPulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 22px 45px rgba(22, 163, 74, 0.65);
+      }
+      55% {
+        transform: scale(1.03);
+        box-shadow: 0 28px 60px rgba(22, 163, 74, 0.9);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 22px 45px rgba(22, 163, 74, 0.65);
+      }
+    }
+
+    .helper-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 14px;
+    }
+
+    /* History table */
+
+    .history-card {
+      margin-top: 28px;
+      padding: 20px 26px 22px;
+      border-radius: 26px;
+      background: linear-gradient(180deg, #050816, #020617);
+      border: 1px solid rgba(15, 23, 42, 0.9);
+      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.9);
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .history-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .download-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.25), transparent 50%),
+                  rgba(15, 23, 42, 0.98);
+      color: var(--text-main);
+      font-size: 12px;
+      padding: 8px 18px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition:
+        background 150ms ease-out,
+        border-color 150ms ease-out,
+        transform 120ms ease-out,
+        box-shadow 150ms ease-out;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.8);
+    }
+
+    .download-btn span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.7);
+      font-size: 11px;
+    }
+
+    .download-btn:hover {
+      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.35), transparent 50%),
+                  rgba(15, 23, 42, 0.98);
+      transform: translateY(-1px);
+      border-color: rgba(148, 163, 184, 0.9);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
+    }
+
+    .download-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.85);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead {
+      color: rgba(148, 163, 184, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-size: 11px;
+    }
+
+    th, td {
+      padding: 9px 8px;
+      text-align: left;
+    }
+
+    th:first-child,
+    td:first-child {
+      padding-left: 4px;
+    }
+
+    th:last-child,
+    td:last-child {
+      padding-right: 4px;
+    }
+
+    tbody tr {
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    tbody tr:last-child {
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    tbody tr:hover {
+      background: radial-gradient(circle at left, rgba(15, 23, 42, 0.85), transparent 70%);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+    }
+
+    .status-ok {
+      background: rgba(22, 163, 74, 0.15);
+      color: #bbf7d0;
+    }
+
+    .status-ok .status-pill-dot {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+    }
+
+    .status-nok {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fecaca;
+    }
+
+    .status-nok .status-pill-dot {
+      background: #f97373;
+      box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.26);
+    }
+
+    .status-unknown {
+      background: rgba(148, 163, 184, 0.15);
+      color: rgba(209, 213, 219, 0.9);
+    }
+
+    .status-unknown .status-pill-dot {
+      background: rgba(148, 163, 184, 0.9);
+      box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.26);
+    }
+
+    .file-link {
+      color: rgba(191, 219, 254, 0.95);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(59, 130, 246, 0.6);
+      padding-bottom: 2px;
+    }
+
+    .file-link:hover {
+      color: #bfdbfe;
+      border-bottom-style: solid;
+    }
+
+    .footer {
+      margin-top: 22px;
+      font-size: 11px;
+      color: rgba(148, 163, 184, 0.9);
+      text-align: center;
+    }
+
+    /* Modal */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.98));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+      animation: fadeIn 180ms ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal {
+      width: min(540px, 94vw);
+      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 50%),
+                  radial-gradient(circle at top right, rgba(248, 113, 113, 0.16), transparent 56%),
+                  #020617;
+      border-radius: 26px;
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      box-shadow: var(--shadow-modal);
+      padding: 22px 26px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.7;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .modal-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 0 6px rgba(248, 250, 252, 0.04);
+    }
+
+    .modal-icon-ok {
+      background: radial-gradient(circle at top, #22c55e, #16a34a);
+      color: #ecfdf5;
+      box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.24);
+    }
+
+    .modal-icon-nok {
+      background: radial-gradient(circle at top, #f97373, #ef4444);
+      color: #fef2f2;
+      box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.24);
+      animation: alertPulse 1s ease-out infinite;
+    }
+
+    .modal-icon-unknown {
+      background: radial-gradient(circle at top, #64748b, #475569);
+      color: #e5e7eb;
+      box-shadow: 0 0 0 6px rgba(148, 163, 184, 0.24);
+    }
+
+    @keyframes alertPulse {
+      0%   { transform: scale(1);   box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.24); }
+      50%  { transform: scale(1.06);box-shadow: 0 0 0 10px rgba(248, 113, 113, 0.34);}
+      100% { transform: scale(1);   box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.24); }
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .modal-body {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .modal-body-row {
+      margin-bottom: 4px;
+    }
+
+    .modal-body span.label {
+      color: var(--text-muted);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .modal-close-btn {
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 13px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.98);
+      color: var(--text-main);
+      cursor: pointer;
+      transition:
+        background 150ms ease-out,
+        transform 120ms ease-out,
+        box-shadow 150ms ease-out;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.9);
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(15, 23, 42, 0.9);
+      transform: translateY(-1px);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.95);
+    }
+
+    .modal-close-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+    }
+
+    /* Loader on button */
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(248, 250, 252, 0.4);
+      border-top-color: rgba(248, 250, 252, 1);
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="pill-header">Guardian Industries</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="tool-pill">
+            <span class="tool-pill-dot"></span>
+            <span>DOP COMPLIANCE TOOL</span>
+          </div>
+        </div>
+        <div class="version-info">
+          <div>DoP Checker v1.2</div>
+          <div id="todayDate"></div>
+        </div>
+      </div>
+
+      <h1>DoP Document Verification</h1>
+      <div class="subtitle">
+        Upload the DoP PDF to run an automatic compliance check.
+      </div>
+
+      <div class="layout-row">
+        <div class="file-area" id="dropZone">
+          <input type="file" id="fileInput" accept="application/pdf" hidden />
+
+          <button type="button" class="file-select-btn" id="selectFileBtn">
+            <span class="icon">📄</span>
+            <span>Select PDF File</span>
+          </button>
+
+          <div class="file-name" id="fileName">No file selected</div>
+
+          <div class="file-hint">
+            You can also <span>drag & drop</span> the PDF into this area.
+          </div>
+        </div>
+
+        <button type="button" class="primary-btn disabled" id="checkBtn">
+          Check the document
+        </button>
+      </div>
+
+      <div class="helper-text">
+        Automatic parsing of DoP content and NULL field detection.
+      </div>
+    </div>
+
+    <div class="history-card">
+      <div class="history-header">
+        <div class="history-title">Verification history</div>
+        <button type="button" class="download-btn" id="downloadBtn">
+          <span class="icon">⬇️</span>
+          <span>Download report (Excel)</span>
+        </button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 18%;">Time</th>
+            <th style="width: 14%;">Status</th>
+            <th style="width: 48%;">Reason</th>
+            <th style="width: 20%;">File</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <!-- Rows will be injected here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      Declaration of Performance • Internal quality tool
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-unknown" id="modalIcon">?</div>
+        <div>
+          <div class="modal-title" id="modalTitle">Verification result</div>
+          <div class="modal-subtitle">Automatic DoP compliance check</div>
+        </div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="modal-close-btn" id="modalCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const selectFileBtn = document.getElementById("selectFileBtn");
+    const fileNameEl = document.getElementById("fileName");
+    const dropZone = document.getElementById("dropZone");
+    const checkBtn = document.getElementById("checkBtn");
+    const historyBody = document.getElementById("historyBody");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const todayDateEl = document.getElementById("todayDate");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalIcon = document.getElementById("modalIcon");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+
+    let selectedFile = null;
+    let isLoading = false;
+    let modalTimer = null;
+    const historyEntries = [];
+
+    todayDateEl.textContent = new Date().toISOString().slice(0, 10);
+
+    function setSelectedFile(file) {
+      selectedFile = file;
+      if (file) {
+        fileNameEl.textContent = file.name;
+        checkBtn.classList.remove("disabled");
+        checkBtn.classList.add("pulse");
+      } else {
+        fileNameEl.textContent = "No file selected";
+        checkBtn.classList.add("disabled");
+        checkBtn.classList.remove("pulse");
+      }
+    }
+
+    selectFileBtn.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setSelectedFile(file);
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove("drag-over");
+      });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files[0];
+      if (file && file.type === "application/pdf") {
+        setSelectedFile(file);
+      }
+    });
+
+    function createSpinner() {
+      const span = document.createElement("span");
+      span.className = "spinner";
+      return span;
+    }
+
+    function setButtonLoading(loading) {
+      isLoading = loading;
+      if (loading) {
+        checkBtn.classList.add("disabled");
+        checkBtn.classList.remove("pulse");
+        if (!checkBtn.querySelector(".spinner")) {
+          const spinner = createSpinner();
+          checkBtn.prepend(spinner);
+        }
+      } else {
+        const spinner = checkBtn.querySelector(".spinner");
+        if (spinner) spinner.remove();
+        if (selectedFile) {
+          checkBtn.classList.remove("disabled");
+          checkBtn.classList.add("pulse");
+        } else {
+          checkBtn.classList.add("disabled");
+          checkBtn.classList.remove("pulse");
+        }
+      }
+    }
+
+    function normalizeResult(raw, fileName) {
+      const cleanedStatus = String(raw.status || "")
+        .replace(/^=+/, "")
+        .trim()
+        .toUpperCase();
+
+      let status = "UNKNOWN";
+      if (cleanedStatus === "OK") status = "OK";
+      if (cleanedStatus === "NOK") status = "NOK";
+
+      const nullCount = Number(raw.nullCount || raw.nulls || 0);
+
+      if (status === "UNKNOWN") {
+        status = nullCount > 0 ? "NOK" : "OK";
+      }
+
+      let reason = String(raw.reason || "").replace(/^=+/, "").trim();
+      if (!reason) {
+        reason =
+          status === "OK"
+            ? "Correct document"
+            : "The document has a NULL value detected.";
+      }
+
+      const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+
+      return {
+        status,
+        nullCount,
+        reason,
+        fileName,
+        timestamp,
+      };
+    }
+
+    function addHistoryRow(entry) {
+      historyEntries.unshift(entry);
+
+      historyBody.innerHTML = "";
+
+      for (const row of historyEntries) {
+        const tr = document.createElement("tr");
+
+        const tdTime = document.createElement("td");
+        tdTime.textContent = row.timestamp;
+        tr.appendChild(tdTime);
+
+        const tdStatus = document.createElement("td");
+        const statusDiv = document.createElement("div");
+        statusDiv.className = "status-pill " +
+          (row.status === "OK"
+            ? "status-ok"
+            : row.status === "NOK"
+            ? "status-nok"
+            : "status-unknown");
+        const dot = document.createElement("span");
+        dot.className = "status-pill-dot";
+        const label = document.createElement("span");
+        label.textContent = row.status;
+        statusDiv.appendChild(dot);
+        statusDiv.appendChild(label);
+        tdStatus.appendChild(statusDiv);
+        tr.appendChild(tdStatus);
+
+        const tdReason = document.createElement("td");
+        tdReason.textContent = row.reason;
+        tr.appendChild(tdReason);
+
+        const tdFile = document.createElement("td");
+        const link = document.createElement("a");
+        link.href = "#";
+        link.className = "file-link";
+        link.textContent = row.fileName;
+        tdFile.appendChild(link);
+        tr.appendChild(tdFile);
+
+        historyBody.appendChild(tr);
+      }
+    }
+
+    function showModal(entry) {
+      modalBody.innerHTML = "";
+
+      modalTitle.textContent =
+        entry.status === "OK" ? "Document is compliant" : "Document requires attention";
+
+      modalIcon.className = "modal-icon";
+      if (entry.status === "OK") {
+        modalIcon.classList.add("modal-icon-ok");
+        modalIcon.textContent = "✔";
+      } else if (entry.status === "NOK") {
+        modalIcon.classList.add("modal-icon-nok");
+        modalIcon.textContent = "!";
+      } else {
+        modalIcon.classList.add("modal-icon-unknown");
+        modalIcon.textContent = "?";
+      }
+
+      const lines = [
+        { label: "Status", value: entry.status },
+        { label: "Reason", value: entry.reason },
+        { label: "Null fields", value: entry.nullCount },
+        { label: "File", value: entry.fileName },
+      ];
+
+      for (const line of lines) {
+        const div = document.createElement("div");
+        div.className = "modal-body-row";
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "label";
+        labelSpan.textContent = line.label + ": ";
+        const valueSpan = document.createElement("span");
+        valueSpan.textContent = line.value;
+        div.appendChild(labelSpan);
+        div.appendChild(valueSpan);
+        modalBody.appendChild(div);
+      }
+
+      modalBackdrop.classList.add("visible");
+
+      if (modalTimer) clearTimeout(modalTimer);
+      modalTimer = setTimeout(hideModal, 5000);
+    }
+
+    function hideModal() {
+      modalBackdrop.classList.remove("visible");
+    }
+
+    modalCloseBtn.addEventListener("click", hideModal);
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) hideModal();
+    });
+
+    async function sendNokAlert(entry) {
+      try {
+        await fetch(
+          "https://1713a740d1cd.ngrok-free.app/webhook/dop-email-alert",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: entry.status,
+              reason: entry.reason,
+              nullCount: entry.nullCount,
+              fileName: entry.fileName,
+              timestamp: entry.timestamp,
+            }),
+          }
+        );
+      } catch {
+        // For now we silently ignore email errors on UI side.
+      }
+    }
+
+    checkBtn.addEventListener("click", async () => {
+      if (!selectedFile || isLoading) {
+        alert("Please select a PDF file first.");
+        return;
+      }
+
+      setButtonLoading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("data", selectedFile);
+
+        const response = await fetch(
+          "https://1713a740d1cd.ngrok-free.app/webhook/dop-check",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const text = await response.text();
+        let raw;
+
+        try {
+          raw = JSON.parse(text);
+        } catch (e) {
+          raw = {
+            status: "NOK",
+            reason: "Invalid JSON from server",
+            nullCount: 0,
+          };
+        }
+
+        const entry = normalizeResult(raw, selectedFile.name);
+        addHistoryRow(entry);
+        showModal(entry);
+
+        if (entry.status === "NOK") {
+          sendNokAlert(entry);
+        }
+      } catch (err) {
+        const entry = {
+          status: "NOK",
+          reason: err.message || "Unknown network error",
+          nullCount: 0,
+          fileName: selectedFile ? selectedFile.name : "Unknown file",
+          timestamp: new Date().toISOString().replace("T", " ").slice(0, 19),
+        };
+        addHistoryRow(entry);
+        showModal(entry);
+        sendNokAlert(entry);
+      } finally {
+        setButtonLoading(false);
+        setSelectedFile(null);
+        fileInput.value = "";
+      }
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!historyEntries.length) {
+        alert("There is no history to export yet.");
+        return;
+      }
+
+      const header = ["Time", "Status", "Reason", "File"];
+      const rows = [header, ...historyEntries.map((e) => [
+        e.timestamp,
+        e.status,
+        e.reason.replace(/"/g, '""'),
+        e.fileName,
+      ])];
+
+      const csv = rows
+        .map((r) => r.map((cell) => `"${cell}"`).join(","))
+        .join("\r\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dop_checker_report.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
