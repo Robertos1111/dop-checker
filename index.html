@@ -992,7 +992,7 @@
     async function sendNokAlert(entry) {
       try {
         await fetch(
-          "https://1713a740d1cd.ngrok-free.app/webhook/dop-email-alert",
+          "https://146234673b1b.ngrok-free.app/webhook/dop-email-alert",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1023,7 +1023,7 @@
         formData.append("data", selectedFile);
 
         const response = await fetch(
-          "https://1713a740d1cd.ngrok-free.app/webhook/dop-check",
+          "https://146234673b1b.ngrok-free.app/webhook/dop-check",
           {
             method: "POST",
             body: formData,
